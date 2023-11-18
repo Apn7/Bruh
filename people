@@ -1,0 +1,72 @@
+package com.example.api;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+public class PeopleActivity extends AppCompatActivity {
+
+    private ArrayList<String> peopleList = new ArrayList<>();
+    private ListView listView;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_people);
+
+        listView = findViewById(R.id.list_item2);
+
+        Intent intent = getIntent();
+        String jsonString = intent.getStringExtra("jsonString");
+        String companyName = intent.getStringExtra("companyName");
+
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            JSONArray companies = jsonObject.getJSONArray("companies");
+
+            for (int i = 0; i < companies.length(); i++) {
+                JSONObject company = companies.getJSONObject(i);
+                String currentCompanyName = company.getString("name");
+
+                if (currentCompanyName.equals(companyName)) {
+                    JSONArray people = company.getJSONArray("people");
+                    for (int j = 0; j < people.length(); j++) {
+                        JSONObject person = people.getJSONObject(j);
+                        String personName = person.getString("name");
+                        peopleList.add(personName);
+                    }
+                    break;
+                }
+            }
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,peopleList);
+            listView.setAdapter(adapter);
+
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    String selectedPerson = peopleList.get(position);
+                    Intent addressIntent = new Intent(PeopleActivity.this, AddressActivity.class);
+                    addressIntent.putExtra("personName", selectedPerson);
+                    addressIntent.putExtra("jsonData", jsonString);
+                    startActivity(addressIntent);
+                }
+            });
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+}
